@@ -83,20 +83,33 @@ namespace BootPartition
                         //Enumerate partitions by using pointer arithmetic
                         for (uint p = 0; p < driveLayout.PartitionCount; p++)
                         {
-                             
+
                             IntPtr ptr = new IntPtr(driveLayoutPtr.ToInt64() + Marshal.OffsetOf(typeof(DRIVE_LAYOUT_INFORMATION_EX), "PartitionEntry").ToInt64() + (p * Marshal.SizeOf(typeof(PARTITION_INFORMATION_EX))));
                             PARTITION_INFORMATION_EX partInfo = (PARTITION_INFORMATION_EX)Marshal.PtrToStructure(ptr, typeof(PARTITION_INFORMATION_EX));
-                            
-                            //Check partition is recognized or not
-                            if ((partInfo.PartitionStyle != PARTITION_STYLE.PARTITION_STYLE_MBR) || (partInfo.Mbr.RecognizedPartition))
-                            {
-                                if (partInfo.Mbr.BootIndicator == true)
-                                {
 
-                                    Console.WriteLine("Drive No: " + i + " Partition Number :" + partInfo.PartitionNumber + " is boot partition");
+                            //Check partition is recognized or not
+                            if (partInfo.PartitionStyle != PARTITION_STYLE.PARTITION_STYLE_GPT)
+                            {
+                                if ((partInfo.PartitionStyle != PARTITION_STYLE.PARTITION_STYLE_MBR) || (partInfo.Mbr.RecognizedPartition))
+                                {
+                                    if (partInfo.Mbr.BootIndicator == true)
+                                    {
+
+                                        Console.WriteLine("Drive No: " + i + " Partition Number :" + partInfo.PartitionNumber + " is boot partition");
+
+                                    }
 
                                 }
-                               
+                            }
+                            else if (partInfo.PartitionStyle == PARTITION_STYLE.PARTITION_STYLE_GPT) {
+                                //e3c9e316-0b5c-4db8-817d-f92df00215ae guid is defined from MS here:
+                                //https://msdn.microsoft.com/en-us/library/windows/desktop/aa365449(v=vs.85).aspx
+                                if (partInfo.Gpt.PartitionType== new Guid("e3c9e316-0b5c-4db8-817d-f92df00215ae"))
+                                {
+                                    Console.WriteLine("Drive No: " + i + " Partition Number :" + partInfo.PartitionNumber + " is boot partition");
+
+
+                                }
                             }
                          
                         }
